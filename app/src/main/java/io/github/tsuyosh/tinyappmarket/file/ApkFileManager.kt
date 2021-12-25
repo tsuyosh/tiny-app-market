@@ -7,12 +7,12 @@ import java.io.IOException
 
 class ApkFileManager(
     private val assetManager: AssetManager,
-    private val apkDirName: String = "apk/",
+    private val apkDirName: String = "apk",
     private val internalStorageApkDir: File
 ) {
     fun listApkFiles(): List<File> {
         val apkFiles = assetManager.list(apkDirName) ?: return emptyList()
-        Log.d(TAG, "apkFiles=$apkFiles")
+        Log.d(TAG, "apkFiles=${apkFiles.joinToString(",")}")
         return apkFiles.mapNotNull(this::toInternalStorageFile)
     }
 
@@ -27,7 +27,7 @@ class ApkFileManager(
             if (!internalStorageApkDir.exists()) {
                 internalStorageApkDir.mkdirs()
             }
-            assetManager.open(apkDirName + fileName).use { inputStream ->
+            assetManager.open("$apkDirName/$fileName").use { inputStream ->
                 inputStream.copyTo(apkFile.outputStream())
             }
             apkFile
