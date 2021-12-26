@@ -162,7 +162,8 @@ fun MarketApplicationListItemPreview() {
         MarketApplication(
             "com.example.app.a",
             "Sample App",
-            File("/path/to/app.apk")
+            File("/path/to/app.apk"),
+            100_000_000L
         )
     ) {
     }

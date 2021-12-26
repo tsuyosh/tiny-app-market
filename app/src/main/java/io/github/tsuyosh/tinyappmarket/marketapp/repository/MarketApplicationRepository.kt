@@ -37,7 +37,8 @@ class MarketApplicationRepository(
         return MarketApplication(
             packageId = packageInfo.applicationInfo.packageName,
             name = name.toString(),
-            apkFile = apkFile
+            apkFile = apkFile,
+            apkFileByteSize = apkFile.length()
         )
     }
 

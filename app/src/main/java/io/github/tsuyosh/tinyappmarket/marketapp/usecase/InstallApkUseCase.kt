@@ -54,7 +54,7 @@ class InstallApkUseCase(
         withContext(Dispatchers.IO) {
             try {
                 val sessionId = packageInstaller.createSession(
-                    createSessionParams(application.apkFile.length())
+                    createSessionParams(application.apkFileByteSize)
                 )
                 Log.d(TAG, "sessionId=$sessionId")
 
