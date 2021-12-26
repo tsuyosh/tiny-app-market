@@ -5,15 +5,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInstaller
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
@@ -23,10 +27,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import io.github.tsuyosh.tinyappmarket.R
 import io.github.tsuyosh.tinyappmarket.marketapp.model.MarketApplication
 import io.github.tsuyosh.tinyappmarket.marketapp.viewmodel.MarketApplicationViewModel
 import io.github.tsuyosh.tinyappmarket.marketapp.viewmodel.MarketApplicationViewModelFactory
@@ -151,7 +158,16 @@ fun MarketApplicationListItem(application: MarketApplication, onClick: () -> Uni
             .padding(16.dp)
             .clickable(onClick = onClick)
     ) {
-        Text(text = application.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        AppIcon(
+            iconDrawable = application.iconDrawable,
+            modifier = Modifier.size(32.dp)
+        )
+        Text(
+            text = application.name,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 
@@ -163,10 +179,33 @@ fun MarketApplicationListItemPreview() {
             "com.example.app.a",
             "Sample App",
             File("/path/to/app.apk"),
-            100_000_000L
+            100_000_000L,
+            AppCompatResources.getDrawable(LocalContext.current, R.mipmap.ic_launcher)
         )
     ) {
     }
 }
+
+@Composable
+fun AppIcon(iconDrawable: Drawable?, modifier: Modifier = Modifier) {
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            ImageView(context)
+        },
+        update = { imageView ->
+            imageView.setImageDrawable(iconDrawable)
+        }
+    )
+}
+
+@Preview
+@Composable
+fun AppIconPreview() {
+    val drawable =
+        AppCompatResources.getDrawable(LocalContext.current, R.mipmap.ic_launcher) ?: return
+    AppIcon(drawable)
+}
+
 
 private const val TAG = "MarketApplicationList"

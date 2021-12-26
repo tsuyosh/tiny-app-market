@@ -34,11 +34,13 @@ class MarketApplicationRepository(
             return null
         }
         val name = packageInfo.applicationInfo.loadLabel(packageManager)
+        val icon = packageInfo.applicationInfo.loadIcon(packageManager)
         return MarketApplication(
             packageId = packageInfo.applicationInfo.packageName,
             name = name.toString(),
             apkFile = apkFile,
-            apkFileByteSize = apkFile.length()
+            apkFileByteSize = apkFile.length(),
+            iconDrawable = icon
         )
     }
 
