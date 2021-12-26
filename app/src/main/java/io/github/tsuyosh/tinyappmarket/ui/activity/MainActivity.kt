@@ -1,6 +1,10 @@
 package io.github.tsuyosh.tinyappmarket.ui.activity
 
-import android.net.Uri
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageInstaller
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -18,9 +22,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,12 +31,18 @@ import io.github.tsuyosh.tinyappmarket.marketapp.model.MarketApplication
 import io.github.tsuyosh.tinyappmarket.marketapp.viewmodel.MarketApplicationViewModel
 import io.github.tsuyosh.tinyappmarket.marketapp.viewmodel.MarketApplicationViewModelFactory
 import io.github.tsuyosh.tinyappmarket.ui.theme.TinyAppMarketTheme
-import kotlinx.coroutines.launch
 import java.io.File
 
 class MainActivity : ComponentActivity() {
     private val applicationsViewModel: MarketApplicationViewModel by viewModels {
         MarketApplicationViewModelFactory(this)
+    }
+
+    private val mInstallerActionReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "onReceive: intent=$intent")
+            intent?.let(this@MainActivity::handleInstallerIntent)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +55,61 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        val intentFilter = IntentFilter().apply {
+            addAction(PACKAGE_INSTALLED_ACTION)
+        }
+        registerReceiver(
+            mInstallerActionReceiver,
+            intentFilter
+        )
+    }
+
+    override fun onDestroy() {
+        unregisterReceiver(mInstallerActionReceiver)
+        super.onDestroy()
+    }
+
+    private fun handleInstallerIntent(intent: Intent) {
+        if (intent.action != PACKAGE_INSTALLED_ACTION) {
+            return
+        }
+        val statusCode =
+            intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+        when (statusCode) {
+            PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)?.let(this::startActivity)
+            }
+            PackageInstaller.STATUS_SUCCESS -> {
+                Toast.makeText(this, "Install succeeded!", Toast.LENGTH_SHORT).show();
+            }
+            PackageInstaller.STATUS_FAILURE,
+            PackageInstaller.STATUS_FAILURE_ABORTED,
+            PackageInstaller.STATUS_FAILURE_BLOCKED,
+            PackageInstaller.STATUS_FAILURE_CONFLICT,
+            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE,
+            PackageInstaller.STATUS_FAILURE_INVALID,
+            PackageInstaller.STATUS_FAILURE_STORAGE -> {
+                Toast.makeText(
+                    this,
+                    "Install failed! $statusCode, " +
+                            "${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            else -> {
+                Toast.makeText(
+                    this,
+                    "Unrecognized status received from installer: $statusCode",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
+        const val PACKAGE_INSTALLED_ACTION =
+            "io.github.tsuyosh.tinyappmarket.SESSION_API_PACKAGE_INSTALLED"
     }
 }
 

@@ -19,4 +19,9 @@ class MarketApplicationViewModel(
             installApkUseCase.execute(application)
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        installApkUseCase.unregisterCallback()
+    }
 }
